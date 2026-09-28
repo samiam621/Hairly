@@ -26,13 +26,13 @@ flowchart LR
 
 ### Example
 
-`POST /api/analyze/barcode` with `{"barcode": "3348070010589", "concern": "dye safety"}` returns:
+`POST /api/analyze/barcode` with `{"barcode": "3348070010589", "concern": "dye allergy"}` returns:
 
 ```json
 {
   "product_name": "Henné poudre - Auburn",
   "verdict": "caution",
-  "summary": "Contains 2 ingredient(s) of concern for dye safety: sodium picramate, lawsonia inermis.",
+  "summary": "Contains 2 ingredient(s) of concern for dye allergy: sodium picramate, lawsonia inermis.",
   "flagged_ingredients": [
     { "name": "sodium picramate", "reason": "Skin sensitizer sometimes added to henna-based dyes.", "severity": "medium" },
     { "name": "lawsonia inermis", "reason": "Henna. Pure henna rarely causes allergy, but \"black henna\" may contain PPD.", "severity": "low" }
@@ -100,7 +100,7 @@ The API runs at `http://localhost:8000`, and interactive docs are at `http://loc
 ```bash
 curl -X POST http://localhost:8000/api/analyze/barcode \
   -H "Content-Type: application/json" \
-  -d '{"barcode": "3348070010589", "concern": "dye safety"}'
+  -d '{"barcode": "3348070010589", "concern": "dye allergy"}'
 ```
 
 ### Run the tests
@@ -156,5 +156,5 @@ Hairly/
 - [ ] React frontend: concern picker, camera barcode scanner, result view
 - [ ] Label-photo flow with Gemini vision
 - [ ] Gemini fallback for unrecognized ingredients
-- [ ] More concerns beyond dye safety
+- [x] Second concern: color-treated hair (alongside dye allergy)
 - [ ] Deployment (Render + Supabase)

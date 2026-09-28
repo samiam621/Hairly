@@ -1,6 +1,6 @@
 {
   "concerns": {
-    "dye safety": {
+    "dye allergy": {
       "p-phenylenediamine": {"severity": "high", "reason": "PPD: strong skin sensitizer and the most common cause of hair-dye allergy; reactions can be severe."},
       "toluene-2,5-diamine": {"severity": "high", "reason": "PTD: strong skin sensitizer closely related to PPD; people allergic to PPD often react to it too."},
       "toluene-2,5-diamine sulfate": {"severity": "high", "reason": "PTD: strong skin sensitizer closely related to PPD; people allergic to PPD often react to it too."},
@@ -30,6 +30,34 @@
       "basic brown 17": {"severity": "low", "reason": "Semi-permanent dye; can cause skin reactions in some people."},
       "basic red 76": {"severity": "low", "reason": "Semi-permanent dye; can cause skin reactions in some people."},
       "hc blue no 16": {"severity": "low", "reason": "Semi-permanent dye; can cause skin reactions in some people."}
+    },
+    "color-treated": {
+      "sodium lauryl sulfate": {"severity": "high", "reason": "Harsh sulfate cleanser; strips dye and speeds color fading."},
+      "ammonium lauryl sulfate": {"severity": "high", "reason": "Harsh sulfate cleanser; strips dye and speeds color fading."},
+      "sodium coco-sulfate": {"severity": "high", "reason": "Coconut-derived but mostly sodium lauryl sulfate; strips dye and speeds color fading."},
+      "sodium c14-16 olefin sulfonate": {"severity": "medium", "reason": "Strong sulfate-free cleanser; about as stripping as sulfates for color."},
+      "sodium laureth sulfate": {"severity": "medium", "reason": "Sulfate cleanser; milder than sodium lauryl sulfate but still fades color over time."},
+      "ammonium laureth sulfate": {"severity": "medium", "reason": "Sulfate cleanser; milder than ammonium lauryl sulfate but still fades color over time."},
+      "sodium myreth sulfate": {"severity": "medium", "reason": "Sulfate cleanser; fades color over repeated washes."},
+      "sodium c12-13 pareth sulfate": {"severity": "medium", "reason": "Sulfate cleanser; fades color over repeated washes."},
+      "tea-lauryl sulfate": {"severity": "medium", "reason": "Sulfate cleanser; fades color over repeated washes."},
+      "sodium dodecylbenzenesulfonate": {"severity": "medium", "reason": "Strong detergent; strips dye and dries hair."},
+      "tea-dodecylbenzenesulfonate": {"severity": "medium", "reason": "Strong detergent; strips dye and dries hair."},
+      "hydrogen peroxide": {"severity": "medium", "reason": "Oxidizer that lightens hair; can shift or fade existing color."},
+      "ammonium persulfate": {"severity": "high", "reason": "Bleach booster; lifts color and weakens already-processed hair."},
+      "potassium persulfate": {"severity": "high", "reason": "Bleach booster; lifts color and weakens already-processed hair."},
+      "sodium persulfate": {"severity": "high", "reason": "Bleach booster; lifts color and weakens already-processed hair."},
+      "sodium hydrosulfite": {"severity": "high", "reason": "Main active in color removers; breaks down permanent dye."},
+      "ammonium thioglycolate": {"severity": "high", "reason": "Perm/straightening agent; breaks hair bonds and can fade or shift color."},
+      "sodium thioglycolate": {"severity": "high", "reason": "Perm/straightening agent; breaks hair bonds and can fade or shift color."},
+      "calcium hydroxide": {"severity": "medium", "reason": "No-lye relaxer base; very high pH opens the cuticle and lets color escape."},
+      "ammonia": {"severity": "medium", "reason": "Alkaline; opens the cuticle so dye washes out faster."},
+      "ethanolamine": {"severity": "medium", "reason": "Alkaline ammonia substitute; opens the cuticle so dye washes out faster."},
+      "sodium carbonate": {"severity": "medium", "reason": "Alkaline; opens the cuticle so dye washes out faster."},
+      "selenium sulfide": {"severity": "medium", "reason": "Anti-dandruff active known to discolor dyed and light hair."},
+      "sodium bicarbonate": {"severity": "low", "reason": "Baking soda; mildly alkaline and used in DIY color removal."},
+      "alcohol denat": {"severity": "low", "reason": "Drying alcohol; can dull color on dry, processed hair."},
+      "isopropyl alcohol": {"severity": "low", "reason": "Drying alcohol; can dull color on dry, processed hair."}
     }
   },
   "known_ingredients": [

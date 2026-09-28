@@ -12,7 +12,7 @@ FIXTURES = Path(__file__).parent / "fixtures" / "obf"
 
 
 def verdict(ingredients: list[str], **kwargs) -> str:
-    return evaluate(ingredients, "dye safety", **kwargs).verdict
+    return evaluate(ingredients, "dye allergy", **kwargs).verdict
 
 
 def test_seed_names_are_already_normalized() -> None:
@@ -27,7 +27,7 @@ def test_seed_severities_are_valid() -> None:
 
 
 def test_worst_severity_wins() -> None:
-    result = evaluate(["water", "hydrogen peroxide", "p-phenylenediamine", "resorcinol"], "dye safety")
+    result = evaluate(["water", "hydrogen peroxide", "p-phenylenediamine", "resorcinol"], "dye allergy")
     assert result.verdict == "avoid"
     assert [f.severity for f in result.flagged_ingredients] == ["high", "medium", "low"]
 
@@ -42,8 +42,17 @@ def test_verdicts() -> None:
     assert verdict(["p-phenylenediamine"], is_hair=False) == "unknown"
 
 
+def test_color_treated_flags_sulfates_not_dyes() -> None:
+    raw = json.loads((FIXTURES / "3600551119816.json").read_text())["product"]["ingredients_text"]
+    result = evaluate(normalize(raw), "color-treated")  # baby shampoo: no dyes, but a sulfate
+    assert result.verdict == "caution"
+    assert [f.name for f in result.flagged_ingredients] == ["sodium laureth sulfate"]
+    assert evaluate(["water", "sodium lauryl sulfate"], "color-treated").verdict == "avoid"
+    assert evaluate(["water", "p-phenylenediamine"], "color-treated").verdict == "safe"
+
+
 def test_concern_is_case_insensitive_and_validated() -> None:
-    assert evaluate(["water"], "  Dye Safety ").verdict == "safe"
+    assert evaluate(["water"], "  Dye Allergy ").verdict == "safe"
     with pytest.raises(HairlyError) as exc:
         evaluate(["water"], "vegan")
     assert exc.value.code == "INVALID_INPUT"

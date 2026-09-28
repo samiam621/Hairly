@@ -18,7 +18,7 @@ def serve_fixtures(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, content=path.read_bytes())
 
 
-def post(barcode: str, concern: str = "dye safety") -> httpx.Response:
+def post(barcode: str, concern: str = "dye allergy") -> httpx.Response:
     return client.post("/api/analyze/barcode", json={"barcode": barcode, "concern": concern})
 
 
@@ -38,9 +38,9 @@ def test_found_product_returns_verdict(obf) -> None:
 @pytest.mark.parametrize(
     ("barcode", "concern", "status", "code"),
     [
-        ("1234567890128", "dye safety", 404, "PRODUCT_NOT_FOUND"),  # OBF 404
-        ("3178041367042", "dye safety", 404, "PRODUCT_NOT_FOUND"),  # no ingredient list
-        ("12ab", "dye safety", 400, "INVALID_INPUT"),
+        ("1234567890128", "dye allergy", 404, "PRODUCT_NOT_FOUND"),  # OBF 404
+        ("3178041367042", "dye allergy", 404, "PRODUCT_NOT_FOUND"),  # no ingredient list
+        ("12ab", "dye allergy", 400, "INVALID_INPUT"),
         ("0309978695325", "vegan", 400, "INVALID_INPUT"),
     ],
 )
@@ -61,7 +61,7 @@ def test_obf_down_is_503(obf) -> None:
     assert response.json()["error"]["code"] == "PRODUCT_NOT_FOUND"
 
 
-@pytest.mark.parametrize("payload", [{"barcode": "0309978695325"}, {"barcode": "", "concern": "dye safety"}, None])
+@pytest.mark.parametrize("payload", [{"barcode": "0309978695325"}, {"barcode": "", "concern": "dye allergy"}, None])
 def test_bad_request_body_is_invalid_input(payload) -> None:
     response = client.post("/api/analyze/barcode", json=payload)
 
