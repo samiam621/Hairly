@@ -10,12 +10,14 @@ export class ApiError extends Error {
 }
 
 export async function request(path, { body, headers, ...options } = {}) {
+  // FormData (a photo upload) is sent as-is: the browser sets the multipart Content-Type itself
+  const json = body && !(body instanceof FormData)
   let res
   try {
     res = await fetch(path, {
       ...options,
-      headers: body ? { 'Content-Type': 'application/json', ...headers } : headers,
-      body: body ? JSON.stringify(body) : undefined,
+      headers: json ? { 'Content-Type': 'application/json', ...headers } : headers,
+      body: json ? JSON.stringify(body) : body,
     })
   } catch {
     // fetch only throws when there's no response at all (backend down, offline)

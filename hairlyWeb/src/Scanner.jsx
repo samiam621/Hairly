@@ -10,7 +10,7 @@ const CAMERA_ERRORS = {
 }
 
 // Reads a barcode from the camera, or from an uploaded photo when the camera is blocked or missing.
-export default function Scanner({ onScan }) {
+export default function Scanner({ onScan, children }) {
   const videoRef = useRef(null)
   const controlsRef = useRef(null)
   const onScanRef = useRef(onScan)
@@ -77,13 +77,16 @@ export default function Scanner({ onScan }) {
   return (
     <div className="scanner">
       <video ref={videoRef} hidden={camera === 'off'} muted playsInline />
-      {camera === 'on' ? (
-        <button type="button" onClick={stopCamera}>Stop camera</button>
-      ) : (
-        <button type="button" onClick={startCamera} disabled={camera === 'starting'}>
-          {camera === 'starting' ? 'Starting camera…' : 'Scan with camera'}
-        </button>
-      )}
+      <div className="scan-options">
+        {camera === 'on' ? (
+          <button type="button" onClick={stopCamera}>Stop camera</button>
+        ) : (
+          <button type="button" onClick={startCamera} disabled={camera === 'starting'}>
+            {camera === 'starting' ? 'Starting camera…' : 'Scan barcode'}
+          </button>
+        )}
+        {children /* whatever App puts between <Scanner> tags: the Scan label button */}
+      </div>
       <label>
         Or upload a photo of the barcode
         <input type="file" accept="image/*" onChange={scanPhoto} />

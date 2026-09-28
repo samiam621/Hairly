@@ -37,6 +37,13 @@ section,
   gap: 24px;
 }
 
+/* Scan barcode | Scan label: two equal choices side by side */
+.scan-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
 fieldset {
   display: grid;
   gap: 12px;
@@ -145,6 +152,11 @@ video {
 
   h1 {
     font-size: 2rem;
+  }
+
+  /* Too narrow for two spaced-out labels side by side, so stack them */
+  .scan-options {
+    grid-template-columns: 1fr;
   }
 }
 
