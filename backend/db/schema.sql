@@ -3,7 +3,6 @@
 create table if not exists public.products (
     barcode text primary key,
     name text,
-    brand text,
     ingredients_raw text,
     is_hair boolean,
     lookup_status text not null check (lookup_status in ('found', 'not_found')),

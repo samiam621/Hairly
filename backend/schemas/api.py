@@ -2,8 +2,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from backend.core.errors import ErrorBody, ErrorCode, ErrorResponse
-
 
 Verdict = Literal["safe", "caution", "avoid", "unknown"]
 Severity = Literal["low", "medium", "high"]
@@ -11,10 +9,6 @@ Severity = Literal["low", "medium", "high"]
 
 class BarcodeAnalyzeRequest(BaseModel):
     barcode: str = Field(min_length=1)
-    concern: str = Field(min_length=1)
-
-
-class LabelAnalyzeRequest(BaseModel):
     concern: str = Field(min_length=1)
 
 

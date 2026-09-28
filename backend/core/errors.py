@@ -1,24 +1,7 @@
 from typing import Literal
 
-from pydantic import BaseModel
 
-
-ErrorCode = Literal[
-    "PRODUCT_NOT_FOUND",
-    "LABEL_UNREADABLE",
-    "INVALID_INPUT",
-    "AI_UNAVAILABLE",
-    "RATE_LIMITED",
-]
-
-
-class ErrorBody(BaseModel):
-    code: ErrorCode
-    message: str
-
-
-class ErrorResponse(BaseModel):
-    error: ErrorBody
+ErrorCode = Literal["PRODUCT_NOT_FOUND", "INVALID_INPUT"]
 
 
 class HairlyError(Exception):

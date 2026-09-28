@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { request } from './api/client'
+import Result from './Result'
 import Scanner from './Scanner'
 import './App.css'
 
@@ -14,26 +15,44 @@ export default function App() {
   const [barcode, setBarcode] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
-  const [error, setError] = useState('')
+  const [error, setError] = useState(null) // ApiError
 
   async function submit(e) {
     e.preventDefault()
     setLoading(true)
-    setResult(null)
-    setError('')
+    setError(null)
     try {
       setResult(await request('/api/analyze/barcode', { method: 'POST', body: { barcode, concern } }))
     } catch (err) {
-      setError(err.message)
+      setError(err)
     } finally {
       setLoading(false)
     }
   }
 
-  return (
-    <main>
-      <h1>Hairly</h1>
-      {/* `required` on the radios blocks submit natively and tells the user what's missing */}
+  // Back to the form; the chosen concern stays for the next product.
+  function scanAnother() {
+    setResult(null)
+    setError(null)
+    setBarcode('')
+  }
+
+  let screen
+  if (result) {
+    screen = <Result result={result} onScanAnother={scanAnother} />
+  } else if (error?.code === 'PRODUCT_NOT_FOUND') {
+    screen = (
+      <section>
+        {/* 503 = Open Beauty Facts was unreachable, so the product may exist */}
+        <h2>{error.status === 503 ? "Couldn't look this product up" : 'Product not found'}</h2>
+        <p>{error.message}</p>
+        {/* ponytail: the label-photo button arrives with Phase 4's POST /api/analyze/label */}
+        <button type="button" onClick={scanAnother}>Scan a different product</button>
+      </section>
+    )
+  } else {
+    screen = (
+      // `required` on the radios blocks submit natively and tells the user what's missing
       <form onSubmit={submit}>
         <fieldset>
           <legend>What are you checking for?</legend>
@@ -66,11 +85,18 @@ export default function App() {
         </label>
 
         <button disabled={loading}>{loading ? 'Checking…' : 'Check product'}</button>
+        {error && <p role="alert">{error.message}</p>}
       </form>
+    )
+  }
 
-      {error && <p role="alert">{error}</p>}
-      {/* ponytail: placeholder until the result-view checklist item */}
-      {result && <p>{result.verdict}: {result.summary}</p>}
+  return (
+    <main>
+      <header>
+        <h1>Hairly</h1>
+        <p>Ingredient check for your hair</p>
+      </header>
+      {screen}
     </main>
   )
 }

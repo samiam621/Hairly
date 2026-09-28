@@ -1,55 +1,199 @@
 main {
   max-width: 32rem;
   margin: 0 auto;
-  padding: 16px;
+  padding: 0 16px 48px;
+}
+
+header {
+  text-align: center;
+  padding: 40px 0 28px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  letter-spacing: 0.2em;
+}
+
+header p,
+legend,
+label,
+summary,
+.severity {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
 }
 
 form,
+section,
 .scanner {
   display: grid;
-  gap: 16px;
+  gap: 24px;
 }
 
 fieldset {
   display: grid;
-  gap: 8px;
+  gap: 12px;
+  margin: 0;
+  padding: 20px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+}
+
+legend {
+  padding: 0 8px;
 }
 
 label {
   display: grid;
-  gap: 4px;
+  gap: 8px;
 }
 
 fieldset label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  font-size: 1rem;
+  font-weight: 300;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text);
 }
 
 input,
 button {
   font: inherit;
+  color: inherit;
 }
 
-input:not([type='radio']),
-button {
-  padding: 10px 12px;
-  border-radius: 8px;
+input:not([type='radio'], [type='file']) {
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: none;
+  font-size: 1.125rem;
+  letter-spacing: 0.1em;
+  color: var(--text-h);
 }
 
-button:not(:disabled) {
+input:focus-visible {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+
+button,
+::file-selector-button {
+  padding: 14px 20px;
+  border: 1px solid var(--accent);
+  border-radius: 0;
+  background: var(--accent);
+  color: var(--bg);
+  font: 600 0.75rem/1 'Josefin Sans', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* Secondary actions (camera, scan another) are outlined; the submit stays solid */
+button[type='button'],
+::file-selector-button {
+  background: none;
+  color: var(--accent);
+}
+
+::file-selector-button {
+  margin-right: 12px;
+  padding: 10px 14px;
+}
+
+button:not(:disabled):hover {
+  background: var(--bg);
+  color: var(--accent);
+}
+
+button[type='button']:not(:disabled):hover,
+::file-selector-button:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+button:disabled {
+  opacity: 0.5;
+}
+
+button:not(:disabled),
+summary,
+::file-selector-button {
   cursor: pointer;
 }
 
 video {
   width: 100%;
-  border-radius: 8px;
   background: #000;
 }
 
 [role='alert'] {
   color: var(--danger);
+}
+
+.verdict {
+  font-size: 2rem;
   margin: 0;
+}
+
+.safe {
+  color: var(--safe);
+}
+
+.caution,
+.medium {
+  color: var(--caution);
+}
+
+.avoid,
+.high {
+  color: var(--danger);
+}
+
+.product {
+  color: var(--text-h);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.flagged {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.flagged li {
+  padding-left: 16px;
+  border-left: 1px solid var(--border);
+}
+
+.flagged strong {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+details {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+details p {
+  margin-top: 8px;
+}
+
+.disclaimer {
+  font-size: 0.875em;
+  color: var(--muted);
 }

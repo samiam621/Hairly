@@ -127,7 +127,7 @@ Errors share one shape:
 { "error": { "code": "PRODUCT_NOT_FOUND", "message": "We don't have ingredients for this product. Try a photo of the label." } }
 ```
 
-Error codes: `INVALID_INPUT`, `PRODUCT_NOT_FOUND`, `LABEL_UNREADABLE`, `AI_UNAVAILABLE`, `RATE_LIMITED`.
+Error codes: `INVALID_INPUT`, `PRODUCT_NOT_FOUND`.
 
 ---
 

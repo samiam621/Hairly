@@ -24,10 +24,11 @@ export async function request(path, { body, headers, ...options } = {}) {
 
   // .catch: a 502 from the proxy or a crash page isn't JSON
   const data = await res.json().catch(() => null)
-  if (!res.ok) {
+  // data === null on a 200 too: a static host answering /api with its index.html
+  if (!res.ok || data === null) {
     throw new ApiError(
       data?.error?.code ?? 'UNKNOWN',
-      data?.error?.message ?? `Request failed (${res.status})`,
+      data?.error?.message ?? `Something went wrong (${res.status}). Try again.`,
       res.status,
     )
   }
