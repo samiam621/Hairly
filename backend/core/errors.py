@@ -1,7 +1,7 @@
 from typing import Literal
 
 
-ErrorCode = Literal["PRODUCT_NOT_FOUND", "INVALID_INPUT"]
+ErrorCode = Literal["PRODUCT_NOT_FOUND", "LABEL_UNREADABLE", "INVALID_INPUT", "AI_UNAVAILABLE"]
 
 
 class HairlyError(Exception):

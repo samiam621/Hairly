@@ -13,10 +13,15 @@ const CAMERA_ERRORS = {
 export default function Scanner({ onScan }) {
   const videoRef = useRef(null)
   const controlsRef = useRef(null)
+  const onScanRef = useRef(onScan)
   const [camera, setCamera] = useState('off') // off | starting | on
   const [error, setError] = useState('')
 
   useEffect(() => () => controlsRef.current?.stop(), []) // release the camera when leaving the screen
+  // The camera callback outlives renders; this way it sees the concern picked now, not when the camera started.
+  useEffect(() => {
+    onScanRef.current = onScan
+  })
 
   function stopCamera() {
     controlsRef.current?.stop()
@@ -42,7 +47,7 @@ export default function Scanner({ onScan }) {
         scanControls.stop()
         controlsRef.current = null
         setCamera('off')
-        onScan(result.getText())
+        onScanRef.current(result.getText())
       })
       if (!found) {
         controlsRef.current = controls

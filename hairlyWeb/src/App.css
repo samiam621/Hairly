@@ -2,6 +2,7 @@ main {
   max-width: 32rem;
   margin: 0 auto;
   padding: 0 16px 48px;
+  overflow-wrap: anywhere; /* a long unbroken ingredient name can't push the page sideways */
 }
 
 header {
@@ -70,24 +71,21 @@ button {
   color: inherit;
 }
 
-input:not([type='radio'], [type='file']) {
-  padding: 8px 0;
-  border: 0;
-  border-bottom: 1px solid var(--border);
-  border-radius: 0;
-  background: none;
-  font-size: 1.125rem;
-  letter-spacing: 0.1em;
-  color: var(--text-h);
+input[type='radio'] {
+  width: 20px;
+  height: 20px;
+  margin: 0;
 }
 
-input:focus-visible {
-  outline: none;
-  border-bottom-color: var(--accent);
+/* No double-tap zoom on phones, so a quick second tap is just a tap */
+button,
+label {
+  touch-action: manipulation;
 }
 
 button,
 ::file-selector-button {
+  min-height: 48px; /* thumb-sized touch target */
   padding: 14px 20px;
   border: 1px solid var(--accent);
   border-radius: 0;
@@ -134,7 +132,20 @@ summary,
 
 video {
   width: 100%;
+  max-height: 60vh; /* a portrait camera feed would otherwise push the buttons off screen */
+  object-fit: cover;
   background: #000;
+}
+
+@media (max-width: 480px) {
+  header {
+    padding: 24px 0 20px;
+    margin-bottom: 24px;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
 }
 
 [role='alert'] {

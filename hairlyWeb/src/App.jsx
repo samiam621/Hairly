@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { request } from './api/client'
 import Result from './Result'
 import Scanner from './Scanner'
@@ -12,13 +12,15 @@ const CONCERNS = [
 
 export default function App() {
   const [concern, setConcern] = useState('')
-  const [barcode, setBarcode] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null) // ApiError
+  const busy = useRef(false) // `loading` lands a render late, so a double tap could slip past it
 
-  async function submit(e) {
-    e.preventDefault()
+  // Runs the moment the scanner reads a code; there's no separate submit step.
+  async function check(barcode) {
+    if (busy.current) return
+    busy.current = true
     setLoading(true)
     setError(null)
     try {
@@ -26,15 +28,15 @@ export default function App() {
     } catch (err) {
       setError(err)
     } finally {
+      busy.current = false
       setLoading(false)
     }
   }
 
-  // Back to the form; the chosen concern stays for the next product.
+  // Back to the scanner; the chosen concern stays for the next product.
   function scanAnother() {
     setResult(null)
     setError(null)
-    setBarcode('')
   }
 
   let screen
@@ -52,8 +54,7 @@ export default function App() {
     )
   } else {
     screen = (
-      // `required` on the radios blocks submit natively and tells the user what's missing
-      <form onSubmit={submit}>
+      <section>
         <fieldset>
           <legend>What are you checking for?</legend>
           {CONCERNS.map((c) => (
@@ -64,29 +65,22 @@ export default function App() {
                 value={c.slug}
                 checked={concern === c.slug}
                 onChange={() => setConcern(c.slug)}
-                required
               />
               {c.label}
             </label>
           ))}
         </fieldset>
 
-        <Scanner onScan={setBarcode} />
-
-        <label>
-          Barcode
-          <input
-            value={barcode}
-            onChange={(e) => setBarcode(e.target.value.trim())}
-            inputMode="numeric"
-            autoComplete="off"
-            required
-          />
-        </label>
-
-        <button disabled={loading}>{loading ? 'Checking…' : 'Check product'}</button>
+        {/* A scan checks right away, so no concern means no scanner yet */}
+        {loading ? (
+          <p role="status">Checking…</p>
+        ) : concern ? (
+          <Scanner onScan={check} />
+        ) : (
+          <p>Pick what you're checking for to start scanning.</p>
+        )}
         {error && <p role="alert">{error.message}</p>}
-      </form>
+      </section>
     )
   }
 
