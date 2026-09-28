@@ -10,7 +10,7 @@ FOUND_TTL = "30 days"
 MISS_TTL = "3 days"  # short, so a product added to OBF later gets picked up
 
 OBF_URL = "https://world.openbeautyfacts.org/api/v2/product/{barcode}.json"
-OBF_FIELDS = "product_name,brands,categories_tags,ingredients_text,ingredients_text_en"
+OBF_FIELDS = "product_name,categories_tags,ingredients_text,ingredients_text_en"
 BARCODE_LENGTHS = {8, 12, 13, 14}  # EAN-8, UPC-A, EAN-13, GTIN-14
 
 _client = httpx.Client(
@@ -23,7 +23,6 @@ _client = httpx.Client(
 class Product:
     barcode: str
     name: str | None
-    brand: str | None
     ingredients_raw: str
     is_hair: bool
 
@@ -68,7 +67,6 @@ def fetch_product(barcode: str) -> Product | None:
     return Product(
         barcode=barcode,
         name=(product.get("product_name") or "").strip() or None,
-        brand=(product.get("brands") or "").strip() or None,
         ingredients_raw=ingredients,
         is_hair=not categories or "en:hair" in categories,
     )
@@ -95,15 +93,15 @@ def lookup_product(barcode: str) -> Product | None:
 
 
 def _from_row(barcode: str, row: tuple) -> Product | None:
-    _fresh, status, name, brand, ingredients_raw, is_hair = row
-    return Product(barcode, name, brand, ingredients_raw, is_hair) if status == "found" else None
+    _fresh, status, name, ingredients_raw, is_hair = row
+    return Product(barcode, name, ingredients_raw, is_hair) if status == "found" else None
 
 
 def _read_cache(barcode: str) -> tuple | None:
-    """Return (fresh, lookup_status, name, brand, ingredients_raw, is_hair), expired rows included."""
+    """Return (fresh, lookup_status, name, ingredients_raw, is_hair), expired rows included."""
     with pool.connection() as conn:
         return conn.execute(
-            "select expires_at > now(), lookup_status, name, brand, ingredients_raw, is_hair from products"
+            "select expires_at > now(), lookup_status, name, ingredients_raw, is_hair from products"
             " where barcode = %s",
             (barcode,),
         ).fetchone()
@@ -111,18 +109,17 @@ def _read_cache(barcode: str) -> tuple | None:
 
 def _save(barcode: str, product: Product | None) -> None:
     if product:
-        values = (barcode, product.name, product.brand, product.ingredients_raw, product.is_hair, "found", FOUND_TTL)
+        values = (barcode, product.name, product.ingredients_raw, product.is_hair, "found", FOUND_TTL)
     else:
-        values = (barcode, None, None, None, None, "not_found", MISS_TTL)
+        values = (barcode, None, None, None, "not_found", MISS_TTL)
     # Upsert: two simultaneous scans of one barcode both write; the second overwrites instead of erroring.
     with pool.connection() as conn:
         conn.execute(
             """
-            insert into products (barcode, name, brand, ingredients_raw, is_hair, lookup_status, fetched_at, expires_at)
-            values (%s, %s, %s, %s, %s, %s, now(), now() + %s::interval)
+            insert into products (barcode, name, ingredients_raw, is_hair, lookup_status, fetched_at, expires_at)
+            values (%s, %s, %s, %s, %s, now(), now() + %s::interval)
             on conflict (barcode) do update set
                 name = excluded.name,
-                brand = excluded.brand,
                 ingredients_raw = excluded.ingredients_raw,
                 is_hair = excluded.is_hair,
                 lookup_status = excluded.lookup_status,

@@ -10,7 +10,7 @@ PERCENT = re.compile(r"\d+(?:[.,]\d+)?\s*%")
 PARENS = re.compile(r"(?<![\w-])\(([^()]*)\)")  # "Parfum (Fragrance)", not "Bis(2-Hydroxyethyl)"
 
 
-def normalize(raw: str, aliases: dict[str, str] = ALIASES) -> list[str]:
+def normalize(raw: str) -> list[str]:
     """Raw ingredient text in, deduplicated canonical ingredient names out (label order kept)."""
     text = "".join(c for c in unicodedata.normalize("NFKD", raw) if not unicodedata.combining(c))
     text = re.sub(r"[‐-―−]", "-", text)
@@ -23,7 +23,7 @@ def normalize(raw: str, aliases: dict[str, str] = ALIASES) -> list[str]:
         else:
             items = line.split(" - ")  # some brands separate with dashes only
         for item in items:
-            name = _canonical(item.rsplit(":", 1)[-1], aliases)  # "Colorant: Water" section header
+            name = _canonical(item.rsplit(":", 1)[-1])  # "Colorant: Water" section header
             if any(c.isalpha() for c in name):
                 names.append(name)
     return list(dict.fromkeys(names))
@@ -46,7 +46,7 @@ def _inside_name(line: str, i: int) -> bool:
     return before.isalpha() and after.isalpha() and not line[max(i - 2, 0) : i - 1].isalpha() and not line[i + 2 : i + 3].isalpha()
 
 
-def _canonical(item: str, aliases: dict[str, str]) -> str:
+def _canonical(item: str) -> str:
     """Pick the best name out of "Aqua/Water", "Parfum (Fragrance)", "Yellow 5 (CI 19140)"."""
     outer = PARENS.sub(" ", item)
     inner = [part for group in PARENS.findall(item) for part in re.split(r"[,/]", group)]
@@ -56,10 +56,10 @@ def _canonical(item: str, aliases: dict[str, str]) -> str:
     candidates = [_clean(c) for c in [outer, *alternates, *inner]]
     for c in candidates:
         if CI_CODE.fullmatch(c):
-            return aliases.get(c, c)  # "ci 76060" -> "p-phenylenediamine"; plain colours stay "ci 19140"
+            return ALIASES.get(c, c)  # "ci 76060" -> "p-phenylenediamine"; plain colours stay "ci 19140"
     for c in candidates:
-        if c in aliases:
-            return aliases[c]
+        if c in ALIASES:
+            return ALIASES[c]
     return candidates[0]
 
 

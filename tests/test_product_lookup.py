@@ -88,7 +88,7 @@ def test_cache(obf, cache: dict) -> None:
 
 
 def test_expired_entry(obf, cache: dict) -> None:
-    cache["0309978695325"] = (False, "found", "Old name", None, "Aqua", True)  # expired
+    cache["0309978695325"] = (False, "found", "Old name", "Aqua", True)  # expired
 
     obf(lambda req: httpx.Response(502))
     assert lookup_product("0309978695325").name == "Old name"  # OBF down: serve stale

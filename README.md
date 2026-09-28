@@ -26,13 +26,13 @@ flowchart LR
 
 ### Example
 
-`POST /api/analyze/barcode` with `{"barcode": "3348070010589", "concern": "dye safety"}` returns:
+`POST /api/analyze/barcode` with `{"barcode": "3348070010589", "concern": "dye allergy"}` returns:
 
 ```json
 {
   "product_name": "Henné poudre - Auburn",
   "verdict": "caution",
-  "summary": "Contains 2 ingredient(s) of concern for dye safety: sodium picramate, lawsonia inermis.",
+  "summary": "Contains 2 ingredient(s) of concern for dye allergy: sodium picramate, lawsonia inermis.",
   "flagged_ingredients": [
     { "name": "sodium picramate", "reason": "Skin sensitizer sometimes added to henna-based dyes.", "severity": "medium" },
     { "name": "lawsonia inermis", "reason": "Henna. Pure henna rarely causes allergy, but \"black henna\" may contain PPD.", "severity": "low" }
@@ -86,6 +86,8 @@ Create a `.env` file in the repo root:
 
 ```
 DATABASE_URL=postgresql://user:password@host:6543/postgres
+GEMINI_API_KEY=your-key-from-aistudio.google.com
+MAX_IMAGE_MB=10   # optional; largest label photo accepted
 ```
 
 Create the tables and load the rules, then start the server:
@@ -100,7 +102,10 @@ The API runs at `http://localhost:8000`, and interactive docs are at `http://loc
 ```bash
 curl -X POST http://localhost:8000/api/analyze/barcode \
   -H "Content-Type: application/json" \
-  -d '{"barcode": "3348070010589", "concern": "dye safety"}'
+  -d '{"barcode": "3348070010589", "concern": "dye allergy"}'
+
+curl -X POST http://localhost:8000/api/analyze/label \
+  -F image=@label.jpg -F concern="dye allergy"
 ```
 
 ### Run the tests
@@ -119,7 +124,7 @@ DATABASE_URL=postgresql://unused pytest
 |---|---|---|
 | `GET` | `/health` | Health check |
 | `POST` | `/api/analyze/barcode` | `{ "barcode", "concern" }` → verdict |
-| `POST` | `/api/analyze/label` | *(planned)* Ingredient-label photo + concern → verdict |
+| `POST` | `/api/analyze/label` | multipart `image` (JPEG/PNG/WebP/HEIC) + `concern` → verdict, via Gemini vision |
 
 Errors share one shape:
 
@@ -127,7 +132,7 @@ Errors share one shape:
 { "error": { "code": "PRODUCT_NOT_FOUND", "message": "We don't have ingredients for this product. Try a photo of the label." } }
 ```
 
-Error codes: `INVALID_INPUT`, `PRODUCT_NOT_FOUND`, `LABEL_UNREADABLE`, `AI_UNAVAILABLE`, `RATE_LIMITED`.
+Error codes: `INVALID_INPUT`, `PRODUCT_NOT_FOUND`, `LABEL_UNREADABLE` (422), `AI_UNAVAILABLE` (503).
 
 ---
 
@@ -156,5 +161,5 @@ Hairly/
 - [ ] React frontend: concern picker, camera barcode scanner, result view
 - [ ] Label-photo flow with Gemini vision
 - [ ] Gemini fallback for unrecognized ingredients
-- [ ] More concerns beyond dye safety
+- [x] Second concern: color-treated hair (alongside dye allergy)
 - [ ] Deployment (Render + Supabase)

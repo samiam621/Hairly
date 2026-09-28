@@ -43,8 +43,8 @@ def cache(monkeypatch) -> dict:
 
     def save(barcode, product):
         rows[barcode] = (
-            (True, "found", product.name, product.brand, product.ingredients_raw, product.is_hair)
-            if product else (True, "not_found", None, None, None, None)
+            (True, "found", product.name, product.ingredients_raw, product.is_hair)
+            if product else (True, "not_found", None, None, None)
         )
 
     monkeypatch.setattr(product_lookup, "_read_cache", rows.get)

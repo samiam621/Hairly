@@ -12,13 +12,18 @@ DISCLAIMER = "Informational only; not medical advice."
 SEVERITY_RANK = {"high": 0, "medium": 1, "low": 2}
 
 
+def validate_concern(concern: str) -> str:
+    concern = concern.strip().casefold()
+    if concern not in RULES:
+        raise HairlyError("INVALID_INPUT", f"Unknown concern. Choose one of: {', '.join(RULES)}.", 400)
+    return concern
+
+
 def evaluate(
     ingredients: list[str], concern: str, product_name: str | None = None, is_hair: bool = True
 ) -> AnalyzeResponse:
     """Normalized ingredients in, verdict out. Worst severity wins; never `safe` on missing or unrecognized data."""
-    concern = concern.strip().casefold()
-    if concern not in RULES:
-        raise HairlyError("INVALID_INPUT", f"Unknown concern. Choose one of: {', '.join(RULES)}.", 400)
+    concern = validate_concern(concern)
     rules = RULES[concern]
 
     flagged = sorted(

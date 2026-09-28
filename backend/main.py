@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from backend.core.errors import ErrorBody, ErrorResponse, HairlyError
+from backend.core.errors import HairlyError
 from backend.db.database import pool
 from backend.routers import analyze
 from backend.services.rules_engine import load_rules
@@ -24,8 +24,7 @@ app.include_router(analyze.router)
 
 @app.exception_handler(HairlyError)
 async def hairly_error(request: Request, exc: HairlyError) -> JSONResponse:
-    body = ErrorResponse(error=ErrorBody(code=exc.code, message=exc.message))
-    return JSONResponse(body.model_dump(), status_code=exc.status_code)
+    return JSONResponse({"error": {"code": exc.code, "message": exc.message}}, status_code=exc.status_code)
 
 
 @app.exception_handler(RequestValidationError)
