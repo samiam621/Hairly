@@ -51,6 +51,12 @@ def test_color_treated_flags_sulfates_not_dyes() -> None:
     assert evaluate(["water", "p-phenylenediamine"], "color-treated").verdict == "safe"
 
 
+def test_dyes_printed_with_ci_codes_are_flagged() -> None:
+    assert verdict(normalize("Aqua, p-Phenylenediamine (CI 76060)")) == "avoid"
+    assert verdict(normalize("Aqua, Toluene-2,5-Diamine Sulfate (CI 76043)")) == "avoid"
+    assert verdict(normalize("Aqua, CI 76505")) == "caution"  # bare code, resorcinol
+
+
 def test_concern_is_case_insensitive_and_validated() -> None:
     assert evaluate(["water"], "  Dye Allergy ").verdict == "safe"
     with pytest.raises(HairlyError) as exc:

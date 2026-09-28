@@ -56,7 +56,7 @@ def _canonical(item: str) -> str:
     candidates = [_clean(c) for c in [outer, *alternates, *inner]]
     for c in candidates:
         if CI_CODE.fullmatch(c):
-            return c
+            return ALIASES.get(c, c)  # "ci 76060" -> "p-phenylenediamine"; plain colours stay "ci 19140"
     for c in candidates:
         if c in ALIASES:
             return ALIASES[c]
