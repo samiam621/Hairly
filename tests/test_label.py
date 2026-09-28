@@ -31,8 +31,9 @@ def label(readable: bool, ingredients: str) -> httpx.Response:
     return httpx.Response(200, json={"candidates": [{"content": {"parts": [{"text": text}]}}]})
 
 
-def post(image: bytes = JPEG, concern: str = "dye allergy") -> httpx.Response:
-    return client.post("/api/analyze/label", files={"image": ("label.jpg", image, "image/jpeg")}, data={"concern": concern})
+def post(images: tuple[bytes, ...] = (JPEG,), concern: str = "dye allergy") -> httpx.Response:
+    files = [("image", (f"label-{i}.jpg", image, "image/jpeg")) for i, image in enumerate(images)]
+    return client.post("/api/analyze/label", files=files, data={"concern": concern})
 
 
 def test_readable_label_returns_verdict(ai, unrecognized) -> None:
@@ -45,6 +46,18 @@ def test_readable_label_returns_verdict(ai, unrecognized) -> None:
     assert body["flagged_ingredients"][0]["name"] == "p-phenylenediamine"
     assert json.loads(calls[0].content)["contents"][0]["parts"][0]["inlineData"]["mimeType"] == "image/jpeg"
     assert unrecognized  # the label path feeds the curation backlog too
+
+
+def test_several_angles_go_to_gemini_in_one_call(ai) -> None:
+    png = b"\x89PNG\r\n\x1a\n" + b"\0" * 16
+    calls = ai(label(True, "Aqua, Resorcinol"))
+    response = post((JPEG, png, JPEG))
+
+    assert response.json()["verdict"] == "caution"
+    assert len(calls) == 1
+    parts = json.loads(calls[0].content)["contents"][0]["parts"]
+    assert [p["inlineData"]["mimeType"] for p in parts[:-1]] == ["image/jpeg", "image/png", "image/jpeg"]
+    assert "several angles" in parts[-1]["text"]  # the prompt comes after every photo
 
 
 @pytest.mark.parametrize(
@@ -65,19 +78,25 @@ def test_gemini_cannot_read(ai, response: httpx.Response, status: int, code: str
     assert response.json()["error"]["code"] == code
 
 
+HALF = JPEG + b"\0" * (gemini.MAX_IMAGE_BYTES // 2)
+
+
 @pytest.mark.parametrize(
-    ("image", "concern", "status"),
+    ("images", "concern", "status"),
     [
-        (b"", "dye allergy", 400),
-        (JPEG + b"\0" * gemini.MAX_IMAGE_BYTES, "dye allergy", 413),
-        (b"GIF89a" + b"\0" * 16, "dye allergy", 415),
-        (b"<svg xmlns='http://www.w3.org/2000/svg'/>", "dye allergy", 415),
-        (JPEG, "not a concern", 400),
+        ((b"",), "dye allergy", 400),
+        ((JPEG, b""), "dye allergy", 400),  # one bad photo among good ones
+        ((JPEG + b"\0" * gemini.MAX_IMAGE_BYTES,), "dye allergy", 413),
+        ((HALF, HALF), "dye allergy", 413),  # each fits, together they don't
+        ((JPEG,) * (gemini.MAX_PHOTOS + 1), "dye allergy", 400),
+        ((b"GIF89a" + b"\0" * 16,), "dye allergy", 415),
+        ((b"<svg xmlns='http://www.w3.org/2000/svg'/>",), "dye allergy", 415),
+        ((JPEG,), "not a concern", 400),
     ],
 )
-def test_bad_input_never_reaches_gemini(ai, image: bytes, concern: str, status: int) -> None:
+def test_bad_input_never_reaches_gemini(ai, images: tuple[bytes, ...], concern: str, status: int) -> None:
     calls = ai(label(True, "Aqua"))
-    response = post(image, concern)
+    response = post(images, concern)
 
     assert response.status_code == status
     assert response.json()["error"]["code"] == "INVALID_INPUT"
