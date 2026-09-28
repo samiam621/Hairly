@@ -42,6 +42,12 @@ def test_verdicts() -> None:
     assert verdict(["p-phenylenediamine"], is_hair=False) == "unknown"
 
 
+def test_dyes_printed_with_ci_codes_are_flagged() -> None:
+    assert verdict(normalize("Aqua, p-Phenylenediamine (CI 76060)")) == "avoid"
+    assert verdict(normalize("Aqua, Toluene-2,5-Diamine Sulfate (CI 76043)")) == "avoid"
+    assert verdict(normalize("Aqua, CI 76505")) == "caution"  # bare code, resorcinol
+
+
 def test_concern_is_case_insensitive_and_validated() -> None:
     assert evaluate(["water"], "  Dye Safety ").verdict == "safe"
     with pytest.raises(HairlyError) as exc:
