@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from core.errors import ErrorBody, ErrorCode, ErrorResponse
+from backend.core.errors import ErrorBody, ErrorCode, ErrorResponse
 
 
 Verdict = Literal["safe", "caution", "avoid", "unknown"]
