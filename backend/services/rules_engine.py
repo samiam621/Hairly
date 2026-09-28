@@ -1,13 +1,12 @@
-import json
-from pathlib import Path
-
 from backend.core.errors import HairlyError
+from backend.db.database import pool
 from backend.schemas.api import AnalyzeResponse, FlaggedIngredient
+from backend.services.normalize import ALIASES
 
 
-_SEED = json.loads((Path(__file__).parents[1] / "db" / "rules.json").read_text())
-RULES: dict[str, dict[str, dict[str, str]]] = _SEED["concerns"]
-KNOWN: set[str] = set(_SEED["known_ingredients"]).union(*RULES.values())
+# Filled once at startup by load_rules(). Updated in place, never reassigned, so every import sees the data.
+RULES: dict[str, dict[str, dict[str, str]]] = {}  # concern slug -> ingredient -> {severity, reason}
+KNOWN: set[str] = set()
 
 DISCLAIMER = "Informational only; not medical advice."
 SEVERITY_RANK = {"high": 0, "medium": 1, "low": 2}
@@ -51,3 +50,39 @@ def evaluate(
         unrecognized_ingredients=unrecognized,
         disclaimer=DISCLAIMER,
     )
+
+
+def load_rules() -> None:
+    """Read concerns, rules, ingredients and aliases from the database into RULES, KNOWN and ALIASES."""
+    with pool.connection() as conn:
+        rules = {slug: {} for (slug,) in conn.execute("select slug from concerns")}
+        if not rules:
+            raise RuntimeError("The rules tables are empty. Run: python -m backend.db.seed")
+        for slug, name, severity, reason in conn.execute(
+            "select c.slug, i.canonical_name, r.severity, r.reason from concern_rules r"
+            " join concerns c on c.id = r.concern_id join ingredients i on i.id = r.ingredient_id"
+        ):
+            rules[slug][name] = {"severity": severity, "reason": reason}
+        known = {name for (name,) in conn.execute("select canonical_name from ingredients")}
+        aliases = dict(conn.execute(
+            "select a.alias, i.canonical_name from ingredient_aliases a join ingredients i on i.id = a.ingredient_id"
+        ))
+    RULES.clear()
+    RULES.update(rules)
+    KNOWN.clear()
+    KNOWN.update(known)
+    ALIASES.clear()
+    ALIASES.update(aliases)
+
+
+def record_unrecognized(names: list[str]) -> None:
+    """Add names to the rule-curation backlog: new ones start at 1, repeats count up."""
+    if not names:
+        return
+    with pool.connection() as conn:
+        conn.execute(
+            "insert into unrecognized_ingredients (name) select unnest(%s::text[])"
+            " on conflict (name) do update set seen_count = unrecognized_ingredients.seen_count + 1",
+            # Sorted so concurrent scans lock rows in the same order and can't deadlock each other.
+            (sorted(names),),
+        )

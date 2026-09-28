@@ -7,11 +7,13 @@ from fastapi.responses import JSONResponse
 from backend.core.errors import ErrorBody, ErrorResponse, HairlyError
 from backend.db.database import pool
 from backend.routers import analyze
+from backend.services.rules_engine import load_rules
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     pool.open()
+    load_rules()
     yield
     pool.close()
 

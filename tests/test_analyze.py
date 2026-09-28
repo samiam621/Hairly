@@ -67,3 +67,14 @@ def test_bad_request_body_is_invalid_input(payload) -> None:
 
     assert response.status_code == 400
     assert response.json()["error"]["code"] == "INVALID_INPUT"
+
+
+def test_unrecognized_ingredients_are_recorded_for_hair_products_only(obf, unrecognized: list) -> None:
+    obf(serve_fixtures)
+    body = post("6111056012986").json()  # Arabic label, hair product
+    assert unrecognized == [body["unrecognized_ingredients"]] and body["unrecognized_ingredients"]
+
+    product = {"ingredients_text": "Talc, Mystery Pigment", "categories_tags": ["en:make-up"]}
+    obf(lambda req: httpx.Response(200, json={"status": 1, "product": product}))
+    post("3600523614424")
+    assert len(unrecognized) == 1  # the makeup product added nothing

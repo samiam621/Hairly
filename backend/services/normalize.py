@@ -1,10 +1,8 @@
-import json
 import re
 import unicodedata
-from pathlib import Path
 
 
-ALIASES: dict[str, str] = json.loads((Path(__file__).parents[1] / "db" / "aliases.json").read_text())
+ALIASES: dict[str, str] = {}  # alias -> canonical name; filled at startup by rules_engine.load_rules()
 
 SEPARATOR = re.compile(r"[,;•،](?![^()]*\))")  # , ; • and Arabic comma, not inside (...)
 CI_CODE = re.compile(r"\bc\s*\.?\s*i\s*\.?\s*-?\s*(\d{5})\b")
