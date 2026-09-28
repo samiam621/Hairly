@@ -42,11 +42,11 @@ export default function App() {
     run(() => request('/api/analyze/barcode', { method: 'POST', body: { barcode, concern } }))
   }
 
-  // Label: the backend has Gemini read the ingredient list off the photo.
-  function checkLabel(photo) {
+  // Label: the backend has Gemini read the ingredient list off every photo together.
+  function checkLabel(photos) {
     setLabelMode(false) // closes the camera; "Checking…" shows while the AI reads
     const form = new FormData() // multipart form, the shape FastAPI's File()/Form() params expect
-    form.append('image', photo, 'label.jpg')
+    photos.forEach((photo) => form.append('image', photo)) // same field once per photo
     form.append('concern', concern)
     run(() => request('/api/analyze/label', { method: 'POST', body: form }))
   }
@@ -89,7 +89,7 @@ export default function App() {
         ) : !concern ? (
           <p>Pick what you're checking for to start scanning.</p>
         ) : labelMode ? (
-          <LabelCamera onPhoto={checkLabel} onCancel={scanAnother} />
+          <LabelCamera onPhotos={checkLabel} onCancel={scanAnother} />
         ) : (
           <Scanner onScan={checkBarcode}>
             <button type="button" onClick={() => setLabelMode(true)}>Scan label</button>

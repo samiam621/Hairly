@@ -44,6 +44,24 @@ section,
   gap: 12px;
 }
 
+/* Label photos taken so far: a row of thumbnails that scrolls sideways when it outgrows the screen */
+.shots {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+}
+
+.shots img {
+  display: block;
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
 fieldset {
   display: grid;
   gap: 12px;

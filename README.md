@@ -87,7 +87,7 @@ Create a `.env` file in the repo root:
 ```
 DATABASE_URL=postgresql://user:password@host:6543/postgres
 GEMINI_API_KEY=your-key-from-aistudio.google.com
-MAX_IMAGE_MB=10   # optional; largest label photo accepted
+MAX_IMAGE_MB=10   # optional; largest total size of the label photos in one request
 ```
 
 Create the tables and load the rules, then start the server:
@@ -105,7 +105,7 @@ curl -X POST http://localhost:8000/api/analyze/barcode \
   -d '{"barcode": "3348070010589", "concern": "dye allergy"}'
 
 curl -X POST http://localhost:8000/api/analyze/label \
-  -F image=@label.jpg -F concern="dye allergy"
+  -F image=@label-front.jpg -F image=@label-back.jpg -F concern="dye allergy"
 ```
 
 ### Run the tests
@@ -124,7 +124,7 @@ DATABASE_URL=postgresql://unused pytest
 |---|---|---|
 | `GET` | `/health` | Health check |
 | `POST` | `/api/analyze/barcode` | `{ "barcode", "concern" }` → verdict |
-| `POST` | `/api/analyze/label` | multipart `image` (JPEG/PNG/WebP/HEIC) + `concern` → verdict, via Gemini vision |
+| `POST` | `/api/analyze/label` | multipart `image` (1–10 photos, repeat the field per angle; JPEG/PNG/WebP/HEIC) + `concern` → verdict, via Gemini vision |
 
 Errors share one shape:
 
