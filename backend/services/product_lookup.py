@@ -3,7 +3,11 @@ from dataclasses import dataclass
 import httpx
 
 from backend.core.errors import HairlyError
+from backend.db.database import pool
 
+
+FOUND_TTL = "30 days"
+MISS_TTL = "3 days"  # short, so a product added to OBF later gets picked up
 
 OBF_URL = "https://world.openbeautyfacts.org/api/v2/product/{barcode}.json"
 OBF_FIELDS = "product_name,brands,categories_tags,ingredients_text,ingredients_text_en"
@@ -68,3 +72,63 @@ def fetch_product(barcode: str) -> Product | None:
         ingredients_raw=ingredients,
         is_hair=not categories or "en:hair" in categories,
     )
+
+
+def lookup_product(barcode: str) -> Product | None:
+    """Cache-first lookup: our products table, then Open Beauty Facts, then save what OBF said.
+
+    An expired row is refreshed from OBF; if OBF is down, the expired row is served instead.
+    """
+    barcode = validate_barcode(barcode)
+    row = _read_cache(barcode)
+    if row is not None and row[0]:  # fresh
+        return _from_row(barcode, row)
+
+    try:
+        product = fetch_product(barcode)  # an OBF outage raises here, so it never reaches the cache
+    except HairlyError:
+        if row is not None:
+            return _from_row(barcode, row)  # stale beats nothing
+        raise
+    _save(barcode, product)
+    return product
+
+
+def _from_row(barcode: str, row: tuple) -> Product | None:
+    _fresh, status, name, brand, ingredients_raw, is_hair = row
+    return Product(barcode, name, brand, ingredients_raw, is_hair) if status == "found" else None
+
+
+def _read_cache(barcode: str) -> tuple | None:
+    """Return (fresh, lookup_status, name, brand, ingredients_raw, is_hair), expired rows included."""
+    with pool.connection() as conn:
+        return conn.execute(
+            "select expires_at > now(), lookup_status, name, brand, ingredients_raw, is_hair from products"
+            " where barcode = %s",
+            (barcode,),
+        ).fetchone()
+
+
+def _save(barcode: str, product: Product | None) -> None:
+    if product:
+        values = (barcode, product.name, product.brand, product.ingredients_raw, product.is_hair, "found", FOUND_TTL)
+    else:
+        values = (barcode, None, None, None, None, "not_found", MISS_TTL)
+    # Upsert: two simultaneous scans of one barcode both write; the second overwrites instead of erroring.
+    with pool.connection() as conn:
+        conn.execute(
+            """
+            insert into products (barcode, name, brand, ingredients_raw, is_hair, lookup_status, fetched_at, expires_at)
+            values (%s, %s, %s, %s, %s, %s, now(), now() + %s::interval)
+            on conflict (barcode) do update set
+                name = excluded.name,
+                brand = excluded.brand,
+                ingredients_raw = excluded.ingredients_raw,
+                is_hair = excluded.is_hair,
+                lookup_status = excluded.lookup_status,
+                fetched_at = excluded.fetched_at,
+                expires_at = excluded.expires_at,
+                updated_at = now()
+            """,
+            values,
+        )

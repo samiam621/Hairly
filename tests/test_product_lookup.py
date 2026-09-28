@@ -5,7 +5,7 @@ import httpx
 import pytest
 
 from backend.core.errors import HairlyError
-from backend.services.product_lookup import fetch_product
+from backend.services.product_lookup import fetch_product, lookup_product
 
 
 FIXTURES = Path(__file__).parent / "fixtures" / "obf"
@@ -60,3 +60,39 @@ def test_is_hair(obf, categories, is_hair: bool) -> None:
     body = {"status": 1, "product": {"ingredients_text": "Aqua", "categories_tags": categories}}
     obf(lambda req: httpx.Response(200, json=body))
     assert fetch_product("3600523614424").is_hair is is_hair
+
+
+def test_cache(obf, cache: dict) -> None:
+    calls = []
+
+    def count(status: int, body: dict | None = None):
+        def handler(req):
+            calls.append(req.url.path)
+            return httpx.Response(status, json=body or {})
+        return handler
+
+    obf(count(200, {"status": 1, "product": {"product_name": "Dye", "ingredients_text": "Aqua"}}))
+    assert lookup_product("0309978695325").name == "Dye"
+    assert lookup_product("0309978695325").name == "Dye"  # second scan served from cache
+    assert len(calls) == 1
+
+    obf(count(404))
+    assert lookup_product("1234567890128") is None
+    assert lookup_product("1234567890128") is None  # known miss cached too
+    assert len(calls) == 2
+
+    obf(count(502))
+    with pytest.raises(HairlyError):
+        lookup_product("3178040643802")
+    assert "3178040643802" not in cache  # outage is not a miss
+
+
+def test_expired_entry(obf, cache: dict) -> None:
+    cache["0309978695325"] = (False, "found", "Old name", None, "Aqua", True)  # expired
+
+    obf(lambda req: httpx.Response(502))
+    assert lookup_product("0309978695325").name == "Old name"  # OBF down: serve stale
+
+    obf(lambda req: httpx.Response(200, json={"status": 1, "product": {"product_name": "New name", "ingredients_text": "Aqua"}}))
+    assert lookup_product("0309978695325").name == "New name"  # OBF up: refresh
+    assert cache["0309978695325"][:3] == (True, "found", "New name")
