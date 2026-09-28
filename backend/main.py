@@ -1,12 +1,22 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from backend.core.errors import ErrorBody, ErrorResponse, HairlyError
+from backend.db.database import pool
 from backend.routers import analyze
 
 
-app = FastAPI(title="Hairly API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    pool.open()
+    yield
+    pool.close()
+
+
+app = FastAPI(title="Hairly API", lifespan=lifespan)
 app.include_router(analyze.router)
 
 

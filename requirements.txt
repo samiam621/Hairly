@@ -4,3 +4,5 @@ pytest
 httpx
 zxing-cpp 
 opencv-python
+psycopg[binary,pool]
+pydantic-settings
