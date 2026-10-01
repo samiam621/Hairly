@@ -160,6 +160,6 @@ Hairly/
 - [x] PostgreSQL product cache with TTLs and rules tables
 - [ ] React frontend: concern picker, camera barcode scanner, result view
 - [x] Label-photo flow with Gemini vision
-- [x] Gemini fallback for unrecognized ingredients
+- [ ] Gemini fallback for unrecognized ingredients
 - [x] Second concern: color-treated hair (alongside dye allergy)
 - [ ] Deployment (Render + Supabase)
